@@ -42,6 +42,8 @@ class ClockView @JvmOverloads constructor(
         private const val STATUS_BIAS_CLK = 2
         private const val STATUS_SETTING = 1
     }
+    private val hwTimeMillis get() = System.currentTimeMillis()
+
     private var status = STATUS_SYS_CLK
 
     private var panelRadius = 200.0f // 表盘半径
@@ -62,7 +64,7 @@ class ClockView @JvmOverloads constructor(
 
     private val r:Runnable by lazy {
         Runnable {
-            postDelayed (r, 1000)
+            postDelayed (r, 1000 - hwTimeMillis % 1000)
             when(status){
                 STATUS_SYS_CLK -> postInvalidate()
             }
@@ -165,7 +167,7 @@ class ClockView @JvmOverloads constructor(
      * @param canvas
      */
     private fun drawNeedles(canvas: Canvas) {
-        val now = Date(System.currentTimeMillis())
+        val now = Date(hwTimeMillis)
         val hours: Int = now.hours
         val minutes: Int = now.minutes
         val seconds: Int = now.seconds
