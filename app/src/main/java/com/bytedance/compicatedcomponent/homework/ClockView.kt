@@ -36,14 +36,13 @@ class ClockView @JvmOverloads constructor(
 
         private const val DEFAULT_DEGREE_STROKE_WIDTH = 0.010f
 
-        private const val RIGHT_ANGLE = 90
-
         private const val UNIT_DEGREE = (6 * Math.PI / 180).toFloat() // 一个小格的度数
 
-        private const val STATUS_NORMAL = 0
+        private const val STATUS_SYS_CLK = 0
+        private const val STATUS_BIAS_CLK = 2
         private const val STATUS_SETTING = 1
     }
-    private var status = STATUS_NORMAL
+    private var status = STATUS_SYS_CLK
 
     private var panelRadius = 200.0f // 表盘半径
 
@@ -64,7 +63,9 @@ class ClockView @JvmOverloads constructor(
     private val r:Runnable by lazy {
         Runnable {
             postDelayed (r, 1000)
-            postInvalidate()
+            when(status){
+                STATUS_SYS_CLK -> postInvalidate()
+            }
         }
     }
 
@@ -108,15 +109,12 @@ class ClockView @JvmOverloads constructor(
         centerY = halfWidth
         radius = halfWidth
         panelRadius = radius.toFloat()
-        hourPointerLength = panelRadius - 400
-        minutePointerLength = panelRadius - 250
-        secondPointerLength = panelRadius - 150
+        hourPointerLength = panelRadius * 0.4f
+        minutePointerLength = panelRadius * 0.6f
+        secondPointerLength = panelRadius * 0.8f
         drawDegrees(canvas)
         drawHoursValues(canvas)
         drawNeedles(canvas)
-
-        // todo 1: 每一秒刷新一次，让指针动起来
-
     }
 
     private fun drawDegrees(canvas: Canvas) {
@@ -130,7 +128,7 @@ class ClockView @JvmOverloads constructor(
         val rEnd: Int = centerX - (resultWidth * 0.05f).toInt()
         var i = 0
         while (i < FULL_ANGLE) {
-            if (i % RIGHT_ANGLE != 0 && i % 15 != 0) {
+            if (i % 15 != 0) {
                 paint.alpha = CUSTOM_ALPHA
             } else {
                 paint.alpha = FULL_ALPHA
@@ -167,19 +165,18 @@ class ClockView @JvmOverloads constructor(
      * @param canvas
      */
     private fun drawNeedles(canvas: Canvas) {
-        val calendar: Calendar = Calendar.getInstance()
-        val now: Date = calendar.time
-        val nowHours: Int = now.hours
-        val nowMinutes: Int = now.minutes
-        val nowSeconds: Int = now.seconds
+        val now = Date(System.currentTimeMillis())
+        val hours: Int = now.hours
+        val minutes: Int = now.minutes
+        val seconds: Int = now.seconds
         // 画秒针
-        drawPointer(canvas, POINTER_TYPE_SECOND, nowSeconds)
+        if(status == STATUS_SYS_CLK)
+            drawPointer(canvas, POINTER_TYPE_SECOND, seconds)
         // 画分针
-        // todo 2: 画分针
-        drawPointer(canvas, POINTER_TYPE_MINUTES,nowMinutes)
+        drawPointer(canvas, POINTER_TYPE_MINUTES,minutes)
         // 画时针
-        val part = nowMinutes / 12
-        drawPointer(canvas, POINTER_TYPE_HOURS, 5 * nowHours + part)
+        val part = minutes / 12
+        drawPointer(canvas, POINTER_TYPE_HOURS, 5 * hours + part)
     }
 
 
