@@ -4,8 +4,10 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.text.TextPaint
 import android.util.AttributeSet
 import android.view.View
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.cos
 import kotlin.math.sin
@@ -113,9 +115,10 @@ class ClockView @JvmOverloads constructor(
         panelRadius = radius.toFloat()
         hourPointerLength = panelRadius * 0.4f
         minutePointerLength = panelRadius * 0.6f
-        secondPointerLength = panelRadius * 0.8f
+        secondPointerLength = panelRadius * 0.7f
         drawDegrees(canvas)
         drawHoursValues(canvas)
+        drawNumberClock(canvas)
         drawNeedles(canvas)
     }
 
@@ -158,6 +161,35 @@ class ClockView @JvmOverloads constructor(
     private fun drawHoursValues(canvas: Canvas) {
         // Default Color:
         // - hoursValuesColor
+        val paint = getTextPaint(4)
+        val rEnd: Int = centerX - (resultWidth * 0.1f).toInt()
+        var i = 0
+        while (i < FULL_ANGLE) {
+            val stopX = (centerX + rEnd * cos(Math.toRadians(i.toDouble())))
+            val stopY = (centerX - rEnd * sin(Math.toRadians(i.toDouble())))
+
+
+            val str = "${(360-(i + 270)%360)/30}"
+
+            canvas.drawText(str,
+                stopX.toFloat() - paint.measureText(str)/2,
+                stopY.toFloat() - (paint.ascent() + paint.descent())/2,
+                paint)
+
+            i += 30
+        }
+    }
+
+    private fun drawNumberClock(canvas: Canvas){
+        val paint = getTextPaint(6)
+        val date = Date(hwTimeMillis)
+        val str = SimpleDateFormat.getTimeInstance().format(date)
+        canvas.drawText(
+            str,
+            centerX - paint.measureText(str)/2,
+            centerY + (resultWidth * 0.2f),
+            paint
+        )
     }
 
     /**
@@ -214,5 +246,15 @@ class ClockView @JvmOverloads constructor(
         xy[0] = centerX + pointerLength * sin(degree)
         xy[1] = centerY - pointerLength * cos(degree)
         return xy
+    }
+
+    private fun getTextPaint(scaleFontSize:Int) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL_AND_STROKE
+        strokeCap = Paint.Cap.ROUND
+        strokeWidth = resultWidth * DEFAULT_DEGREE_STROKE_WIDTH
+        color = degreesColor
+        alpha = FULL_ALPHA
+        textSize = resultWidth * DEFAULT_DEGREE_STROKE_WIDTH * scaleFontSize
+        strokeWidth = resultWidth * DEFAULT_DEGREE_STROKE_WIDTH / 8
     }
 }
